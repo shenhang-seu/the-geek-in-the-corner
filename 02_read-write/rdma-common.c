@@ -6,7 +6,7 @@ struct message {
   enum {
     MSG_MR,
     MSG_DONE,
-	MSG_DISCONNECT
+    MSG_DISCONNECT
   } type;
 
   union {
@@ -47,14 +47,14 @@ struct connection {
     SS_MR_SENT,
     SS_RDMA_SENT,
     SS_DONE_SENT,
-	SS_DISCONNECT
+    SS_DISCONNECT
   } send_state;
 
   enum {
     RS_INIT,
     RS_MR_RECV,
     RS_DONE_RECV,
-	RS_DISCONNECT
+    RS_DISCONNECT
   } recv_state;
 };
 
@@ -234,7 +234,7 @@ void on_completion(struct ibv_wc *wc)
 
     TEST_NZ(ibv_post_send(conn->qp, &wr, &bad_wr));
 
-	post_receives(conn);
+    post_receives(conn);
     conn->send_msg->type = MSG_DONE;
     send_message(conn);
 
