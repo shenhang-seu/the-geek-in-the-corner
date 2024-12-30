@@ -53,7 +53,7 @@ int on_addr_resolved(struct rdma_cm_id *id)
 {
   printf("address resolved.\n");
 
-  build_connection(id);
+  client_build_connection(id);
   sprintf(get_local_message_region(id->context), "message from active/client side with pid %d", getpid());
   TEST_NZ(rdma_resolve_route(id, TIMEOUT_IN_MS));
 
