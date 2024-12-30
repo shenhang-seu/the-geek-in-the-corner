@@ -185,6 +185,10 @@ void on_completion(struct ibv_wc *wc)
     die("on_completion: status is not IBV_WC_SUCCESS.");
 
   if (wc->opcode & IBV_WC_RECV) {
+    if (RS_DONE_RECV == conn->recv_state + 1)
+    {
+      printf("remote buffer: %s\n", get_peer_message_region(conn));
+    }
     conn->recv_state++;
 
     if (conn->recv_msg->type == MSG_MR) {
@@ -229,7 +233,6 @@ void on_completion(struct ibv_wc *wc)
     send_message(conn);
 
   } else if (conn->send_state == SS_DONE_SENT && conn->recv_state == RS_DONE_RECV) {
-    printf("remote buffer: %s\n", get_peer_message_region(conn));
     rdma_disconnect(conn->id);
   }
 }
