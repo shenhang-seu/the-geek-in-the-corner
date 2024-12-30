@@ -5,7 +5,8 @@ static const int RDMA_BUFFER_SIZE = 1024;
 struct message {
   enum {
     MSG_MR,
-    MSG_DONE
+    MSG_DONE,
+	MSG_DISCONNECT
   } type;
 
   union {
@@ -45,13 +46,15 @@ struct connection {
     SS_INIT,
     SS_MR_SENT,
     SS_RDMA_SENT,
-    SS_DONE_SENT
+    SS_DONE_SENT,
+	SS_DISCONNECT
   } send_state;
 
   enum {
     RS_INIT,
     RS_MR_RECV,
-    RS_DONE_RECV
+    RS_DONE_RECV,
+	RS_DISCONNECT
   } recv_state;
 };
 
@@ -188,6 +191,8 @@ void on_completion(struct ibv_wc *wc)
     if (RS_DONE_RECV == conn->recv_state + 1)
     {
       printf("remote buffer: %s\n", get_peer_message_region(conn));
+	  conn->send_msg->type = MSG_DISCONNECT;
+      send_message(conn);
     }
     conn->recv_state++;
 
@@ -201,7 +206,7 @@ void on_completion(struct ibv_wc *wc)
 
   } else {
     conn->send_state++;
-    printf("send completed successfully.\n");
+    printf("send completed successfully, state:%d\n", conn->send_state);
   }
 
   if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
@@ -229,10 +234,11 @@ void on_completion(struct ibv_wc *wc)
 
     TEST_NZ(ibv_post_send(conn->qp, &wr, &bad_wr));
 
+	post_receives(conn);
     conn->send_msg->type = MSG_DONE;
     send_message(conn);
 
-  } else if (conn->send_state == SS_DONE_SENT && conn->recv_state == RS_DONE_RECV) {
+  } else if (conn->send_state == SS_DISCONNECT && conn->recv_state == RS_DISCONNECT) {
     rdma_disconnect(conn->id);
   }
 }
