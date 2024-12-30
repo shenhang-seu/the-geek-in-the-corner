@@ -8,7 +8,7 @@ static void usage(const char *argv0);
 
 int main(int argc, char **argv)
 {
-  struct sockaddr_in6 addr;
+  struct sockaddr_in addr;
   struct rdma_cm_event *event = NULL;
   struct rdma_cm_id *listener = NULL;
   struct rdma_event_channel *ec = NULL;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     usage(argv[0]);
 
   memset(&addr, 0, sizeof(addr));
-  addr.sin6_family = AF_INET6;
+  addr.sin_family = AF_INET;
 
   TEST_Z(ec = rdma_create_event_channel());
   TEST_NZ(rdma_create_id(ec, &listener, NULL, RDMA_PS_TCP));
@@ -57,7 +57,7 @@ int on_connect_request(struct rdma_cm_id *id)
   struct rdma_conn_param cm_params;
 
   printf("received connection request.\n");
-  build_connection(id);
+  server_build_connection(id);
   build_params(&cm_params);
   sprintf(get_local_message_region(id->context), "message from passive/server side with pid %d", getpid());
   TEST_NZ(rdma_accept(id, &cm_params));
