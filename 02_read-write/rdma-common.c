@@ -251,7 +251,7 @@ void server_on_completion(struct ibv_wc *wc)
   } else {
     conn->send_state++;
     printf("send completed successfully, state:%d\n", conn->send_state);
-	if (SS_DONE_SENT == conn->send_state)
+    if (SS_DONE_SENT == conn->send_state)
     {
       printf("remote buffer: %s\n", get_peer_message_region(conn));
 	  conn->send_msg->type = MSG_DISCONNECT;
@@ -314,7 +314,7 @@ void client_on_completion(struct ibv_wc *wc)
   } else {
     conn->send_state++;
     printf("send completed successfully, state:%d\n", conn->send_state);
-	if (SS_DONE_SENT == conn->send_state)
+    if (SS_DONE_SENT == conn->send_state)
     {
       printf("remote buffer: %s\n", get_peer_message_region(conn));
 	  conn->send_msg->type = MSG_DISCONNECT;
@@ -421,6 +421,8 @@ void register_memory(struct connection *conn)
 
   conn->rdma_local_region = malloc(RDMA_BUFFER_SIZE);
   conn->rdma_remote_region = malloc(RDMA_BUFFER_SIZE);
+  memset(conn->rdma_local_region, 0, RDMA_BUFFER_SIZE);
+  memset(conn->rdma_remote_region, 0, RDMA_BUFFER_SIZE);
 
   TEST_Z(conn->send_mr = ibv_reg_mr(
     s_ctx->pd, 
