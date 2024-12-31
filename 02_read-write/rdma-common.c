@@ -238,12 +238,6 @@ void server_on_completion(struct ibv_wc *wc)
     die("on_completion: status is not IBV_WC_SUCCESS.");
 
   if (wc->opcode & IBV_WC_RECV) {
-    if (RS_DONE_RECV == conn->recv_state + 1)
-    {
-      printf("remote buffer: %s\n", get_peer_message_region(conn));
-	  conn->send_msg->type = MSG_DISCONNECT;
-      send_message(conn);
-    }
     conn->recv_state++;
 
     if (conn->recv_msg->type == MSG_MR) {
@@ -257,6 +251,12 @@ void server_on_completion(struct ibv_wc *wc)
   } else {
     conn->send_state++;
     printf("send completed successfully, state:%d\n", conn->send_state);
+	if (SS_DONE_SENT == conn->send_state)
+    {
+      printf("remote buffer: %s\n", get_peer_message_region(conn));
+	  conn->send_msg->type = MSG_DISCONNECT;
+      send_message(conn);
+    }
   }
 
   if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
@@ -301,12 +301,6 @@ void client_on_completion(struct ibv_wc *wc)
     die("on_completion: status is not IBV_WC_SUCCESS.");
 
   if (wc->opcode & IBV_WC_RECV) {
-    if (RS_DONE_RECV == conn->recv_state + 1)
-    {
-      printf("remote buffer: %s\n", get_peer_message_region(conn));
-          conn->send_msg->type = MSG_DISCONNECT;
-      send_message(conn);
-    }
     conn->recv_state++;
 
     if (conn->recv_msg->type == MSG_MR) {
@@ -320,6 +314,12 @@ void client_on_completion(struct ibv_wc *wc)
   } else {
     conn->send_state++;
     printf("send completed successfully, state:%d\n", conn->send_state);
+	if (SS_DONE_SENT == conn->send_state)
+    {
+      printf("remote buffer: %s\n", get_peer_message_region(conn));
+	  conn->send_msg->type = MSG_DISCONNECT;
+      send_message(conn);
+    }
   }
 
   if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
