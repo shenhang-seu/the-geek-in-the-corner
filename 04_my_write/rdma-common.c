@@ -6,7 +6,8 @@ static const int RDMA_BUFFER_SIZE = 1024;
 struct message {
 	enum {
 		MSG_MR,
-		MSG_DONE
+		MSG_DONE,
+		MSG_DISCONNECT
 	} type;
 
 	union {
@@ -278,6 +279,10 @@ void server_on_completion(struct ibv_wc* wc)
 			conn->send_msg->type = MSG_DONE;
 			send_message(conn);
 		}
+		else if (conn->recv_msg->type == MSG_DISCONNECT)
+		{
+			printf("receive client's MSG_DISCONNECT successfully\n");
+		}
 		else
 		{
 			printf("receive successfully\n");
@@ -317,7 +322,10 @@ void client_on_completion(struct ibv_wc* wc)
 		if (s_mode == M_WRITE)
 		{
 			printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
+			conn->send_msg->type = MSG_DISCONNECT;
+			send_message(conn);
 		}
+		sleep(1);
 		rdma_disconnect(conn->id);
 	}
 
