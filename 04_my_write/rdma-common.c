@@ -43,19 +43,6 @@ struct connection {
 
 	char* rdma_local_region;
 	char* rdma_remote_region;
-
-	enum {
-		SS_INIT,
-		SS_MR_SENT,
-		SS_RDMA_SENT,
-		SS_DONE_SENT
-	} send_state;
-
-	enum {
-		RS_INIT,
-		RS_MR_RECV,
-		RS_DONE_RECV
-	} recv_state;
 };
 
 static void server_build_context(struct ibv_context* verbs);
@@ -94,9 +81,6 @@ void server_build_connection(struct rdma_cm_id* id)
 	conn->id = id;
 	conn->qp = id->qp;
 
-	conn->send_state = SS_INIT;
-	conn->recv_state = RS_INIT;
-
 	conn->connected = 0;
 
 	register_memory(conn);
@@ -117,9 +101,6 @@ void client_build_connection(struct rdma_cm_id* id)
 
 	conn->id = id;
 	conn->qp = id->qp;
-
-	conn->send_state = SS_INIT;
-	conn->recv_state = RS_INIT;
 
 	conn->connected = 0;
 
@@ -239,8 +220,6 @@ void server_on_completion(struct ibv_wc* wc)
 		die("server_on_completion: status is not IBV_WC_SUCCESS.");
 
 	if (wc->opcode & IBV_WC_RECV) {
-		conn->recv_state++;
-
 		if (conn->recv_msg->type == MSG_MR) {
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
 			post_receives(conn); /* only rearm for MSG_MR */
@@ -309,7 +288,6 @@ void server_on_completion(struct ibv_wc* wc)
 		{
 			printf("send completed successfully.\n");
 		}
-		conn->send_state++;
 	}
 }
 
@@ -321,8 +299,6 @@ void client_on_completion(struct ibv_wc* wc)
 		die("client_on_completion: status is not IBV_WC_SUCCESS.");
 
 	if (wc->opcode & IBV_WC_RECV) {
-		conn->recv_state++;
-
 		if (conn->recv_msg->type == MSG_MR) {
 			printf("client received server's MR.\n");
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
@@ -367,7 +343,6 @@ void client_on_completion(struct ibv_wc* wc)
 		{
 			printf("send completed successfully.\n");
 		}
-		conn->send_state++;
 	}
 }
 
