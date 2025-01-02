@@ -262,6 +262,9 @@ void server_on_completion(struct ibv_wc* wc)
 		else if (conn->recv_msg->type == MSG_DISCONNECT)
 		{
 			printf("receive client's MSG_DISCONNECT successfully\n");
+			printf("server send MSG_DISCONNECT to client and wait disconnect...\n");
+			conn->send_msg->type = MSG_DISCONNECT;
+			send_message(conn);
 		}
 		else
 		{
@@ -284,6 +287,10 @@ void server_on_completion(struct ibv_wc* wc)
 		else if (MSG_SERVER_DONE == conn->send_msg->type)
 		{
 			printf("server send MSG_SERVER_DONE to client successfully.\n");
+		}
+		else if (MSG_DISCONNECT == conn->send_msg->type)
+		{
+			printf("server send MSG_DISCONNECT to client successfully.\n");
 		}
 		else
 		{
@@ -310,6 +317,7 @@ void client_on_completion(struct ibv_wc* wc)
 			printf("client inform server to operate client's memory(client send MSG_CLIENT_READY to server).\n");
 		}
 		else if (conn->recv_msg->type == MSG_SERVER_DONE) {
+			post_receives(conn); /* rearm for MSG_SERVER_DONE，因为后续还要接收server发来的MSG_DISCONNECT */
 			if (s_mode == M_WRITE)
 			{
 				printf("client receive server's MSG_SERVER_DONE successfully.\n");
@@ -319,6 +327,10 @@ void client_on_completion(struct ibv_wc* wc)
 				conn->send_msg->type = MSG_DISCONNECT;
 				send_message(conn);
 			}
+		}
+		else if (conn->recv_msg->type == MSG_DISCONNECT)
+		{
+			printf("client receive server's MSG_DISCONNECT successfully.\n");
 			rdma_disconnect(conn->id);
 		}
 		else
