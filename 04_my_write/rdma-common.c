@@ -290,7 +290,7 @@ void server_on_completion(struct ibv_wc* wc)
 
 	}
 	else {
-		if (SS_INIT == conn->send_state)
+		if (MSG_MR == conn->send_msg->type)
 		{
 			printf("server send MR back to client completed successfully.\n");
 		}
@@ -351,7 +351,7 @@ void client_on_completion(struct ibv_wc* wc)
 
 	}
 	else {
-		if (SS_INIT == conn->send_state)
+		if (conn->send_msg->type == MSG_MR)
 		{
 			printf("client send MR to server completed successfully.\n");
 		}
