@@ -264,29 +264,29 @@ void server_on_completion(struct ibv_wc* wc)
 		}
 		else
 		{
-			printf("receive completed successfully\n");
+			printf("receive successfully\n");
 		}
 
 	}
 	else {
 		if (MSG_MR == conn->send_msg->type)
 		{
-			printf("server send MR back to client completed successfully.\n");
+			printf("server send MR back to client successfully.\n");
 		}
 		else if (MSG_RDMA_OPERATION == conn->send_msg->type)
 		{
-			printf("server send rdma operation to client completed successfully.\n");
+			printf("server send rdma operation to client successfully.\n");
 			conn->send_msg->type = MSG_DONE;
 			send_message(conn);
 			printf("server inform client rdma operation finish(server send MSG_DONE to client).\n");
 		}
 		else if (MSG_DONE == conn->send_msg->type)
 		{
-			printf("server send MSG_DONE to client completed successfully.\n");
+			printf("server send MSG_DONE to client successfully.\n");
 		}
 		else
 		{
-			printf("send completed successfully.\n");
+			printf("send successfully.\n");
 		}
 	}
 }
@@ -311,7 +311,7 @@ void client_on_completion(struct ibv_wc* wc)
 		else if (conn->recv_msg->type == MSG_DONE) {
 			if (s_mode == M_WRITE)
 			{
-				printf("client receive server's MSG_DONE completed successfully.\n");
+				printf("client receive server's MSG_DONE successfully.\n");
 				printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
 
 				printf("client send MSG_DISCONNECT to server.\n");
@@ -322,26 +322,26 @@ void client_on_completion(struct ibv_wc* wc)
 		}
 		else
 		{
-			printf("receive completed successfully\n");
+			printf("receive successfully\n");
 		}
 
 	}
 	else {
 		if (conn->send_msg->type == MSG_MR)
 		{
-			printf("client send MR to server completed successfully.\n");
+			printf("client send MR to server successfully.\n");
 		}
 		else if (conn->send_msg->type == MSG_DONE)
 		{
-			printf("client send MSG_DONE to server completed successfully.\n");
+			printf("client send MSG_DONE to server successfully.\n");
 		}
 		else if (conn->send_msg->type == MSG_DISCONNECT)
 		{
-			printf("client send MSG_DISCONNECT to server completed successfully.\n");
+			printf("client send MSG_DISCONNECT to server successfully.\n");
 		}
 		else
 		{
-			printf("send completed successfully.\n");
+			printf("send successfully.\n");
 		}
 	}
 }
