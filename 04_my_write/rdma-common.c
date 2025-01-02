@@ -1,4 +1,5 @@
 #include "rdma-common.h"
+#include <stdbool.h>
 
 static const int RDMA_BUFFER_SIZE = 1024;
 
@@ -309,6 +310,14 @@ void client_on_completion(struct ibv_wc* wc)
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
 			post_receives(conn); /* only rearm for MSG_MR */
 		}
+		
+		if (conn->recv_msg->type == MSG_DONE) {
+		if (s_mode == M_WRITE)
+		{
+			printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
+		}
+		rdma_disconnect(conn->id);
+	}
 
 	}
 	else {
@@ -318,7 +327,14 @@ void client_on_completion(struct ibv_wc* wc)
 		}
 		else
 		{
-			printf("send completed successfully.\n");
+			if (conn->send_msg->type == MSG_DONE)
+			{
+				printf("client send MSG_DONE to server completed successfully.\n");
+			}
+			else
+			{
+				printf("send completed successfully.\n");
+			}
 		}
 		conn->send_state++;
 
@@ -327,16 +343,7 @@ void client_on_completion(struct ibv_wc* wc)
 	if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
 		conn->send_msg->type = MSG_DONE;
 		send_message(conn);
-		printf("client inform server to operate client's memory.\n");
-
-	}
-
-	if (conn->recv_msg->type == MSG_DONE) {
-		if (s_mode == M_WRITE)
-		{
-			printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
-		}
-		rdma_disconnect(conn->id);
+		printf("client inform server to operate client's memory(client send MSG_DONE to server).\n");
 	}
 }
 
