@@ -259,7 +259,7 @@ void server_on_completion(struct ibv_wc* wc)
 				memset(&wr, 0, sizeof(wr));
 
 				wr.wr_id = (uintptr_t)conn;
-				wr.opcode = (s_mode == M_WRITE) ? IBV_WR_RDMA_WRITE : IBV_WR_RDMA_READ;
+				wr.opcode = (s_mode == M_WRITE) ? IBV_WR_RDMA_WRITE : IBV_WR_RDMA_READ;//在IBV_WR_RDMA_WRITE这种类型中，remote QP不需要调用ibv_post_recv，因为发送方知道数据写到remote node的详细位置
 				wr.sg_list = &sge;
 				wr.num_sge = 1;
 				wr.send_flags = IBV_SEND_SIGNALED;
@@ -440,7 +440,7 @@ void send_message(struct connection* conn)
 	memset(&wr, 0, sizeof(wr));
 
 	wr.wr_id = (uintptr_t)conn;
-	wr.opcode = IBV_WR_SEND;
+	wr.opcode = IBV_WR_SEND;//在这种类型中，发送方并不知道数据会写到remote node的何处。接收方需要调用ibv_post_recv，并且将接收到的数据放到指定的地址中
 	wr.sg_list = &sge;
 	wr.num_sge = 1;
 	wr.send_flags = IBV_SEND_SIGNALED;
