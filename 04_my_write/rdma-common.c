@@ -327,6 +327,10 @@ void client_on_completion(struct ibv_wc* wc)
 			printf("client received server's MR.\n");
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
 			post_receives(conn); /* only rearm for MSG_MR */
+			
+			conn->send_msg->type = MSG_DONE;
+			send_message(conn);
+			printf("client inform server to operate client's memory(client send MSG_DONE to server).\n");
 		}
 		else if (conn->recv_msg->type == MSG_DONE) {
 			if (s_mode == M_WRITE)
@@ -364,12 +368,6 @@ void client_on_completion(struct ibv_wc* wc)
 			printf("send completed successfully.\n");
 		}
 		conn->send_state++;
-	}
-
-	if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
-		conn->send_msg->type = MSG_DONE;
-		send_message(conn);
-		printf("client inform server to operate client's memory(client send MSG_DONE to server).\n");
 	}
 }
 
