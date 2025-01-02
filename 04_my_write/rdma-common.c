@@ -248,7 +248,7 @@ void server_on_completion(struct ibv_wc* wc)
 			send_mr(conn);
 		}
 		else if (conn->recv_msg->type == MSG_DONE) {
-			post_receives(conn); /* rearm for MSG_DONE */
+			post_receives(conn); /* rearm for MSG_DONE，因为后续还要接收client发来的MSG_DISCONNECT */
 
 			struct ibv_send_wr wr, * bad_wr = NULL;
 			struct ibv_sge sge;
@@ -322,10 +322,11 @@ void client_on_completion(struct ibv_wc* wc)
 		if (s_mode == M_WRITE)
 		{
 			printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
+
+			printf("client send MSG_DISCONNECT to server.\n");
 			conn->send_msg->type = MSG_DISCONNECT;
 			send_message(conn);
 		}
-		sleep(1);
 		rdma_disconnect(conn->id);
 	}
 
@@ -340,6 +341,10 @@ void client_on_completion(struct ibv_wc* wc)
 			if (conn->send_msg->type == MSG_DONE)
 			{
 				printf("client send MSG_DONE to server completed successfully.\n");
+			}
+			else if (conn->send_msg->type == MSG_DISCONNECT)
+			{
+				printf("client send MSG_DISCONNECT to server completed successfully.\n");
 			}
 			else
 			{
