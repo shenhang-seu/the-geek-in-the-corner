@@ -246,8 +246,7 @@ void server_on_completion(struct ibv_wc* wc)
 			printf("server first received client's MR and send back.\n");
 			send_mr(conn);
 		}
-
-		if (conn->recv_msg->type == MSG_DONE) {
+		else if (conn->recv_msg->type == MSG_DONE) {
 			post_receives(conn); /* rearm for MSG_DONE */
 
 			struct ibv_send_wr wr, * bad_wr = NULL;
@@ -278,6 +277,10 @@ void server_on_completion(struct ibv_wc* wc)
 			}
 			conn->send_msg->type = MSG_DONE;
 			send_message(conn);
+		}
+		else
+		{
+			printf("receive successfully\n");
 		}
 
 	}
