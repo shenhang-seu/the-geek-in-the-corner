@@ -7,7 +7,8 @@ struct message {
 	enum {
 		MSG_MR,
 		MSG_DONE,
-		MSG_DISCONNECT
+		MSG_DISCONNECT,
+		MSG_RDMA_OPERATION
 	} type;
 
 	union {
@@ -255,6 +256,7 @@ void server_on_completion(struct ibv_wc* wc)
 
 			if (s_mode == M_WRITE)
 			{
+			    conn->send_msg->type = MSG_RDMA_OPERATION;
 				printf("server writing message to client's memory...\n"); //server往client的rdma_remote_region写入数据
 				memset(&wr, 0, sizeof(wr));
 
@@ -276,8 +278,6 @@ void server_on_completion(struct ibv_wc* wc)
 			{
 				printf("server reading message from client's memory...\n");//本例子只实现写
 			}
-			conn->send_msg->type = MSG_DONE;
-			send_message(conn);
 		}
 		else if (conn->recv_msg->type == MSG_DISCONNECT)
 		{
@@ -285,7 +285,7 @@ void server_on_completion(struct ibv_wc* wc)
 		}
 		else
 		{
-			printf("receive successfully\n");
+			printf("receive completed successfully\n");
 		}
 
 	}
@@ -293,6 +293,17 @@ void server_on_completion(struct ibv_wc* wc)
 		if (SS_INIT == conn->send_state)
 		{
 			printf("server send MR back to client completed successfully.\n");
+		}
+		else if (MSG_RDMA_OPERATION == conn->send_msg->type)
+		{
+			printf("server send rdma operation to client completed successfully.\n");
+			conn->send_msg->type = MSG_DONE;
+			send_message(conn);
+			printf("server inform client rdma operation finish(server send MSG_DONE to client).\n");
+		}
+		else if (MSG_DONE == conn->send_msg->type)
+		{
+			printf("server send MSG_DONE to client completed successfully.\n");
 		}
 		else
 		{
@@ -317,18 +328,22 @@ void client_on_completion(struct ibv_wc* wc)
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
 			post_receives(conn); /* only rearm for MSG_MR */
 		}
-		
-		if (conn->recv_msg->type == MSG_DONE) {
-		if (s_mode == M_WRITE)
-		{
-			printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
+		else if (conn->recv_msg->type == MSG_DONE) {
+			if (s_mode == M_WRITE)
+			{
+				printf("client receive server's MSG_DONE completed successfully.\n");
+				printf("client's remote buffer: %s\n", conn->rdma_remote_region); //client访问server写入的数据
 
-			printf("client send MSG_DISCONNECT to server.\n");
-			conn->send_msg->type = MSG_DISCONNECT;
-			send_message(conn);
+				printf("client send MSG_DISCONNECT to server.\n");
+				conn->send_msg->type = MSG_DISCONNECT;
+				send_message(conn);
+			}
+			rdma_disconnect(conn->id);
 		}
-		rdma_disconnect(conn->id);
-	}
+		else
+		{
+			printf("receive completed successfully\n");
+		}
 
 	}
 	else {
@@ -336,23 +351,19 @@ void client_on_completion(struct ibv_wc* wc)
 		{
 			printf("client send MR to server completed successfully.\n");
 		}
+		else if (conn->send_msg->type == MSG_DONE)
+		{
+			printf("client send MSG_DONE to server completed successfully.\n");
+		}
+		else if (conn->send_msg->type == MSG_DISCONNECT)
+		{
+			printf("client send MSG_DISCONNECT to server completed successfully.\n");
+		}
 		else
 		{
-			if (conn->send_msg->type == MSG_DONE)
-			{
-				printf("client send MSG_DONE to server completed successfully.\n");
-			}
-			else if (conn->send_msg->type == MSG_DISCONNECT)
-			{
-				printf("client send MSG_DISCONNECT to server completed successfully.\n");
-			}
-			else
-			{
-				printf("send completed successfully.\n");
-			}
+			printf("send completed successfully.\n");
 		}
 		conn->send_state++;
-
 	}
 
 	if (conn->send_state == SS_MR_SENT && conn->recv_state == RS_MR_RECV) {
