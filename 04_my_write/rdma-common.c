@@ -243,14 +243,13 @@ void server_on_completion(struct ibv_wc* wc)
 			memcpy(&conn->peer_mr, &conn->recv_msg->data.mr, sizeof(conn->peer_mr));
 			post_receives(conn); /* only rearm for MSG_MR */
 
-			if (conn->send_state == SS_INIT)
-			{
-				printf("server first received client's MR and send back.\n");
-				send_mr(conn);
-			}
+			printf("server first received client's MR and send back.\n");
+			send_mr(conn);
 		}
 
 		if (conn->recv_msg->type == MSG_DONE) {
+			post_receives(conn); /* rearm for MSG_DONE */
+
 			struct ibv_send_wr wr, * bad_wr = NULL;
 			struct ibv_sge sge;
 
